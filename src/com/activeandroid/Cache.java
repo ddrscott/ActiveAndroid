@@ -25,7 +25,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.activeandroid.serializer.TypeSerializer;
-import com.activeandroid.util.Log;
+import com.activeandroid.util.LogUtil;
 
 public final class Cache {
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -54,7 +54,7 @@ public final class Cache {
 
 	public static synchronized void initialize(Application application) {
 		if (sIsInitialized) {
-			Log.v("ActiveAndroid already initialized.");
+			LogUtil.v("ActiveAndroid already initialized.");
 			return;
 		}
 
@@ -69,12 +69,12 @@ public final class Cache {
 
 		sIsInitialized = true;
 
-		Log.v("ActiveAndroid initialized succesfully.");
+		LogUtil.v("ActiveAndroid initialized succesfully.");
 	}
 
 	public static synchronized void clear() {
 		sEntities = new HashSet<Model>();
-		Log.v("Cache cleared.");
+		LogUtil.v("Cache cleared.");
 	}
 
 	public static synchronized void dispose() {
@@ -86,7 +86,7 @@ public final class Cache {
 
 		sIsInitialized = false;
 
-		Log.v("ActiveAndroid disposed. Call initialize to use library.");
+		LogUtil.v("ActiveAndroid disposed. Call initialize to use library.");
 	}
 
 	// Database access

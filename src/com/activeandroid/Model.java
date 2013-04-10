@@ -27,7 +27,7 @@ import com.activeandroid.annotation.Column;
 import com.activeandroid.query.Delete;
 import com.activeandroid.query.Select;
 import com.activeandroid.serializer.TypeSerializer;
-import com.activeandroid.util.Log;
+import com.activeandroid.util.LogUtil;
 import com.activeandroid.util.ReflectionUtils;
 
 @SuppressWarnings("unchecked")
@@ -86,7 +86,7 @@ public abstract class Model {
 							fieldType = value.getClass();
 							// check that the serializer returned what it promised
 							if (!fieldType.equals(typeSerializer.getSerializedType())) {
-								Log.w(String.format("TypeSerializer returned wrong type: expected a %s but got a %s",
+								LogUtil.w(String.format("TypeSerializer returned wrong type: expected a %s but got a %s",
 										typeSerializer.getSerializedType(), fieldType));
 							}
 						}
@@ -136,10 +136,10 @@ public abstract class Model {
 				}
 			}
 			catch (IllegalArgumentException e) {
-				Log.e(e.getClass().getName(), e);
+				LogUtil.e(e.getClass().getName(), e);
 			}
 			catch (IllegalAccessException e) {
-				Log.e(e.getClass().getName(), e);
+				LogUtil.e(e.getClass().getName(), e);
 			}
 		}
 
@@ -247,13 +247,13 @@ public abstract class Model {
 				}
 			}
 			catch (IllegalArgumentException e) {
-				Log.e(e.getMessage());
+				LogUtil.e(e.getMessage());
 			}
 			catch (IllegalAccessException e) {
-				Log.e(e.getMessage());
+				LogUtil.e(e.getMessage());
 			}
 			catch (SecurityException e) {
-				Log.e(e.getMessage());
+				LogUtil.e(e.getMessage());
 			}
 		}
 	}

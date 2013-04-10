@@ -29,7 +29,7 @@ import java.util.Map;
 import android.app.Application;
 
 import com.activeandroid.serializer.TypeSerializer;
-import com.activeandroid.util.Log;
+import com.activeandroid.util.LogUtil;
 import com.activeandroid.util.ReflectionUtils;
 
 import dalvik.system.DexFile;
@@ -54,10 +54,10 @@ final class ModelInfo {
 			scanForModel(application);
 		}
 		catch (IOException e) {
-			Log.e("Couln't open source path.", e);
+			LogUtil.e("Couln't open source path.", e);
 		}
 
-		Log.i("ModelInfo loaded.");
+		LogUtil.i("ModelInfo loaded.");
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -160,13 +160,13 @@ final class ModelInfo {
 				}
 			}
 			catch (ClassNotFoundException e) {
-				Log.e("Couldn't create class.", e);
+				LogUtil.e("Couldn't create class.", e);
 			}
 			catch (InstantiationException e) {
-				Log.e("Couldn't instantiate TypeSerializer.", e);
+				LogUtil.e("Couldn't instantiate TypeSerializer.", e);
 			}
 			catch (IllegalAccessException e) {
-				Log.e("IllegalAccessException", e);
+				LogUtil.e("IllegalAccessException", e);
 			}
 		}
 	}

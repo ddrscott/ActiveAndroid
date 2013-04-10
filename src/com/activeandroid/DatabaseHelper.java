@@ -31,7 +31,7 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import com.activeandroid.util.Log;
+import com.activeandroid.util.LogUtil;
 import com.activeandroid.util.NaturalOrderComparator;
 import com.activeandroid.util.ReflectionUtils;
 import com.activeandroid.util.SQLiteUtils;
@@ -63,7 +63,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
 	public void onCreate(SQLiteDatabase db) {
 		if (SQLiteUtils.FOREIGN_KEYS_SUPPORTED) {
 			db.execSQL("PRAGMA foreign_keys=ON;");
-			Log.i("Foreign Keys supported. Enabling foreign key features.");
+			LogUtil.i("Foreign Keys supported. Enabling foreign key features.");
 		}
 
 		db.beginTransaction();
@@ -82,11 +82,11 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
 	public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
 		if (SQLiteUtils.FOREIGN_KEYS_SUPPORTED) {
 			db.execSQL("PRAGMA foreign_keys=ON;");
-			Log.i("Foreign Keys supported. Enabling foreign key features.");
+			LogUtil.i("Foreign Keys supported. Enabling foreign key features.");
 		}
 
 		if (!executeMigrations(db, oldVersion, newVersion)) {
-			Log.i("No migrations found. Calling onCreate.");
+			LogUtil.i("No migrations found. Calling onCreate.");
 			onCreate(db);
 		}
 	}
@@ -124,7 +124,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
 			inputStream.close();
 		}
 		catch (IOException e) {
-			Log.e("Failed to open file", e);
+			LogUtil.e("Failed to open file", e);
 		}
 	}
 
@@ -148,11 +148,11 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
 						executeSqlScript(db, file);
 						migrationExecuted = true;
 
-						Log.i(file + " executed succesfully.");
+						LogUtil.i(file + " executed succesfully.");
 					}
 				}
 				catch (NumberFormatException e) {
-					Log.w("Skipping invalidly named file: " + file, e);
+					LogUtil.w("Skipping invalidly named file: " + file, e);
 				}
 			}
 
@@ -160,7 +160,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
 			db.endTransaction();
 		}
 		catch (IOException e) {
-			Log.e("Failed to execute migrations.", e);
+			LogUtil.e("Failed to execute migrations.", e);
 		}
 
 		return migrationExecuted;
@@ -177,7 +177,7 @@ public final class DatabaseHelper extends SQLiteOpenHelper {
 			}
 		}
 		catch (IOException e) {
-			Log.e("Failed to execute " + file, e);
+			LogUtil.e("Failed to execute " + file, e);
 		}
 	}
 

@@ -168,7 +168,7 @@ public final class SQLiteUtils {
 			}
 		}
 		else {
-			Log.e("No type mapping for: " + type.toString());
+			LogUtil.e("No type mapping for: " + type.toString());
 		}
 
 		return definition;
@@ -193,7 +193,7 @@ public final class SQLiteUtils {
 
 		}
 		catch (Exception e) {
-			Log.e("Failed to process cursor.", e);
+			LogUtil.e("Failed to process cursor.", e);
 		}
 
 		return entities;
