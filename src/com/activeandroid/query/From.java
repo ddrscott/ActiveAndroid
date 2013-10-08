@@ -20,9 +20,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import android.text.TextUtils;
+
 import com.activeandroid.Cache;
 import com.activeandroid.Model;
 import com.activeandroid.query.Join.JoinType;
+import com.activeandroid.util.LogUtil;
 import com.activeandroid.util.SQLiteUtils;
 
 public final class From implements Sqlable {
@@ -138,44 +141,64 @@ public final class From implements Sqlable {
 
 	@Override
 	public String toSql() {
-		String sql = "";
-
-		sql += mQueryBase.toSql();
-		sql += "FROM " + Cache.getTableName(mType) + " ";
+		StringBuilder sql = new StringBuilder();
+		sql.append(mQueryBase.toSql());
+		sql.append("FROM ");
+		sql.append(Cache.getTableName(mType)).append(" ");
 
 		if (mAlias != null) {
-			sql += "AS " + mAlias + " ";
+			sql.append("AS ");
+			sql.append(mAlias);
+			sql.append(" ");
 		}
 
 		for (Join join : mJoins) {
-			sql += join.toSql();
+			sql.append(join.toSql());
 		}
 
 		if (mWhere != null) {
-			sql += "WHERE " + mWhere + " ";
+			sql.append("WHERE ");
+			sql.append(mWhere);
+			sql.append(" ");
 		}
 
 		if (mGroupBy != null) {
-			sql += "GROUP BY " + mGroupBy + " ";
+			sql.append("GROUP BY ");
+			sql.append(mGroupBy);
+			sql.append(" ");
 		}
 
 		if (mHaving != null) {
-			sql += "HAVING " + mHaving + " ";
+			sql.append("HAVING ");
+			sql.append(mHaving);
+			sql.append(" ");
 		}
 
 		if (mOrderBy != null) {
-			sql += "ORDER BY " + mOrderBy + " ";
+			sql.append("ORDER BY ");
+			sql.append(mOrderBy);
+			sql.append(" ");
 		}
 
 		if (mLimit != null) {
-			sql += "LIMIT " + mLimit + " ";
+			sql.append("LIMIT ");
+			sql.append(mLimit);
+			sql.append(" ");
 		}
 
 		if (mOffset != null) {
-			sql += "OFFSET " + mOffset + " ";
+			sql.append("OFFSET ");
+			sql.append(mOffset);
+			sql.append(" ");
 		}
 
-		return sql.trim();
+		// Don't wast time building the string
+		// unless we're going to log it.
+		if (LogUtil.isEnabled()) {
+			LogUtil.v(sql.toString() + " " + TextUtils.join(",", getArguments()));
+		}
+
+		return sql.toString().trim();
 	}
 
 	public <T extends Model> List<T> execute() {

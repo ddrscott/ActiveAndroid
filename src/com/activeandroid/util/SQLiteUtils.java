@@ -16,12 +16,6 @@ package com.activeandroid.util;
  * limitations under the License.
  */
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
 import android.database.Cursor;
 import android.os.Build;
 import android.text.TextUtils;
@@ -31,6 +25,12 @@ import com.activeandroid.Model;
 import com.activeandroid.TableInfo;
 import com.activeandroid.annotation.Column;
 import com.activeandroid.serializer.TypeSerializer;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public final class SQLiteUtils {
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -122,8 +122,9 @@ public final class SQLiteUtils {
 				TextUtils.join(", ", definitions));
 	}
 
+	@SuppressWarnings("unchecked")
 	public static String createColumnDefinition(TableInfo tableInfo, Field field) {
-		String definition = null;
+		StringBuilder definition = new StringBuilder();
 
 		Class<?> type = field.getType();
 		final String name = tableInfo.getColumnName(field);
@@ -135,43 +136,57 @@ public final class SQLiteUtils {
 		}
 
 		if (TYPE_MAP.containsKey(type)) {
-			definition = name + " " + TYPE_MAP.get(type).toString();
+			definition.append(name);
+			definition.append(" ");
+			definition.append(TYPE_MAP.get(type).toString());
 		}
 		else if (ReflectionUtils.isModel(type)) {
-			definition = name + " " + SQLiteType.INTEGER.toString();
+			definition.append(name);
+			definition.append(" ");
+			definition.append(SQLiteType.INTEGER.toString());
 		}
 		else if (ReflectionUtils.isSubclassOf(type, Enum.class)) {
-			definition = name + " " + SQLiteType.TEXT.toString();
+			definition.append(name);
+			definition.append(" ");
+			definition.append(SQLiteType.TEXT.toString());
 		}
 
-		if (definition != null) {
+		if (!TextUtils.isEmpty(definition)) {
 			if (column.length() > -1) {
-				definition += "(" + column.length() + ")";
+				definition.append("(");
+				definition.append(column.length());
+				definition.append(")");
 			}
 
 			if (name.equals("Id")) {
-				definition += " PRIMARY KEY AUTOINCREMENT";
+				definition.append(" PRIMARY KEY AUTOINCREMENT");
 			}
 
 			if (column.notNull()) {
-				definition += " NOT NULL ON CONFLICT " + column.onNullConflict().toString();
+				definition.append(" NOT NULL ON CONFLICT ");
+				definition.append(column.onNullConflict().toString());
 			}
 
 			if (column.unique()) {
-				definition += " UNIQUE ON CONFLICT " + column.onUniqueConflict().toString();
+				definition.append(" UNIQUE ON CONFLICT ");
+				definition.append(column.onUniqueConflict().toString());
 			}
 
 			if (FOREIGN_KEYS_SUPPORTED && ReflectionUtils.isModel(type)) {
-				definition += " REFERENCES " + tableInfo.getTableName() + "(Id)";
-				definition += " ON DELETE " + column.onDelete().toString().replace("_", " ");
-				definition += " ON UPDATE " + column.onUpdate().toString().replace("_", " ");
+				definition.append(" REFERENCES ");
+				definition.append(Cache.getTableInfo((Class<? extends Model>) type).getTableName());
+				definition.append("(Id)");
+				definition.append(" ON DELETE ");
+				definition.append(column.onDelete().toString().replace("_", " "));
+				definition.append(" ON UPDATE ");
+				definition.append(column.onUpdate().toString().replace("_", " "));
 			}
 		}
 		else {
 			LogUtil.e("No type mapping for: " + type.toString());
 		}
 
-		return definition;
+		return definition.toString();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -183,10 +198,13 @@ public final class SQLiteUtils {
 
 			if (cursor.moveToFirst()) {
 				do {
-					// TODO: Investigate entity cache leak
-					T entity = (T) entityConstructor.newInstance();
-					((Model) entity).loadFromCursor(type, cursor);
-					entities.add(entity);
+					Model entity = Cache.getEntity(type, cursor.getLong(cursor.getColumnIndex("Id")));
+					if (entity == null) {
+						entity = (T) entityConstructor.newInstance();
+					}
+
+					entity.loadFromCursor(cursor);
+					entities.add((T) entity);
 				}
 				while (cursor.moveToNext());
 			}

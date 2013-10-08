@@ -16,7 +16,7 @@ package com.activeandroid;
  * limitations under the License.
  */
 
-import android.app.Application;
+import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.activeandroid.util.LogUtil;
@@ -26,13 +26,22 @@ public final class ActiveAndroid {
 	// PUBLIC METHODS
 	//////////////////////////////////////////////////////////////////////////////////////
 
-	public synchronized static void initialize(Application application) {
-		initialize(application, false);
+	public static void initialize(Context context) {
+		initialize(new Configuration.Builder(context).create());
 	}
 
-	public synchronized static void initialize(Application application, boolean loggingEnabled) {
+	public static void initialize(Configuration configuration) {
+		initialize(configuration, false);
+	}
+
+	public static void initialize(Context context, boolean loggingEnabled) {
+		initialize(new Configuration.Builder(context).create(), loggingEnabled);
+	}
+
+	public static void initialize(Configuration configuration, boolean loggingEnabled) {
+		// Set logging enabled first
 		setLoggingEnabled(loggingEnabled);
-		Cache.initialize(application);
+		Cache.initialize(configuration);
 	}
 
 	public static void clearCache() {
@@ -47,7 +56,7 @@ public final class ActiveAndroid {
 		LogUtil.setEnabled(enabled);
 	}
 
-	public synchronized static SQLiteDatabase getDatabase() {
+	public static SQLiteDatabase getDatabase() {
 		return Cache.openDatabase();
 	}
 

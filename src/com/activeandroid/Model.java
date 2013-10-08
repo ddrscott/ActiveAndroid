@@ -16,19 +16,20 @@ package com.activeandroid;
  * limitations under the License.
  */
 
-import java.lang.reflect.Field;
-import java.util.List;
-
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.activeandroid.annotation.Column;
+import com.activeandroid.content.ContentProvider;
 import com.activeandroid.query.Delete;
 import com.activeandroid.query.Select;
 import com.activeandroid.serializer.TypeSerializer;
 import com.activeandroid.util.LogUtil;
 import com.activeandroid.util.ReflectionUtils;
+
+import java.lang.reflect.Field;
+import java.util.List;
 
 @SuppressWarnings("unchecked")
 public abstract class Model {
@@ -47,7 +48,6 @@ public abstract class Model {
 
 	public Model() {
 		mTableInfo = Cache.getTableInfo(getClass());
-		Cache.addEntity(this);
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -61,6 +61,9 @@ public abstract class Model {
 	public final void delete() {
 		Cache.openDatabase().delete(mTableInfo.getTableName(), "Id=?", new String[] { getId().toString() });
 		Cache.removeEntity(this);
+
+		Cache.getContext().getContentResolver()
+				.notifyChange(ContentProvider.createUri(mTableInfo.getType(), mId), null);
 	}
 
 	public final void save() {
@@ -131,7 +134,7 @@ public abstract class Model {
 				else if (ReflectionUtils.isModel(fieldType)) {
 					values.put(fieldName, ((Model) value).getId());
 				}
-				else if (ReflectionUtils.isSubclassOf(fieldType, Enum.class)){
+				else if (ReflectionUtils.isSubclassOf(fieldType, Enum.class)) {
 					values.put(fieldName, ((Enum<?>) value).name());
 				}
 			}
@@ -149,6 +152,9 @@ public abstract class Model {
 		else {
 			db.update(mTableInfo.getTableName(), values, "Id=" + mId, null);
 		}
+
+		Cache.getContext().getContentResolver()
+				.notifyChange(ContentProvider.createUri(mTableInfo.getType(), mId), null);
 	}
 
 	// Convenience methods
@@ -157,13 +163,13 @@ public abstract class Model {
 		new Delete().from(type).where("Id=?", id).execute();
 	}
 
-	public static <T extends Model> T load(Class<? extends Model> type, long id) {
+	public static <T extends Model> T load(Class<T> type, long id) {
 		return new Select().from(type).where("Id=?", id).executeSingle();
 	}
 
 	// Model population
 
-	public final void loadFromCursor(Class<? extends Model> type, Cursor cursor) {
+	public final void loadFromCursor(Cursor cursor) {
 		for (Field field : mTableInfo.getFields()) {
 			final String fieldName = mTableInfo.getColumnName(field);
 			Class<?> fieldType = field.getType();
@@ -181,7 +187,7 @@ public abstract class Model {
 				Object value = null;
 
 				if (typeSerializer != null) {
-				  fieldType = typeSerializer.getSerializedType();
+					fieldType = typeSerializer.getSerializedType();
 				}
 
 				// TODO: Find a smarter way to do this? This if block is necessary because we
@@ -230,10 +236,10 @@ public abstract class Model {
 
 					value = entity;
 				}
-				else if (ReflectionUtils.isSubclassOf(fieldType, Enum.class)){
+				else if (ReflectionUtils.isSubclassOf(fieldType, Enum.class)) {
 					@SuppressWarnings("rawtypes")
-					final Class<? extends Enum> enumType =  (Class<? extends Enum>) fieldType;
-					value=Enum.valueOf(enumType, cursor.getString(columnIndex));
+					final Class<? extends Enum> enumType = (Class<? extends Enum>) fieldType;
+					value = Enum.valueOf(enumType, cursor.getString(columnIndex));
 				}
 
 				// Use a deserializer if one is available
@@ -247,14 +253,18 @@ public abstract class Model {
 				}
 			}
 			catch (IllegalArgumentException e) {
-				LogUtil.e(e.getMessage());
+				LogUtil.e(e.getClass().getName(), e);
 			}
 			catch (IllegalAccessException e) {
-				LogUtil.e(e.getMessage());
+				LogUtil.e(e.getClass().getName(), e);
 			}
 			catch (SecurityException e) {
-				LogUtil.e(e.getMessage());
+				LogUtil.e(e.getClass().getName(), e);
 			}
+		}
+
+		if (mId != null) {
+			Cache.addEntity(this);
 		}
 	}
 
@@ -262,13 +272,18 @@ public abstract class Model {
 	// PROTECTED METHODS
 	//////////////////////////////////////////////////////////////////////////////////////
 
-	protected final <E extends Model> List<E> getMany(Class<? extends Model> type, String foreignKey) {
+	protected final <T extends Model> List<T> getMany(Class<T> type, String foreignKey) {
 		return new Select().from(type).where(Cache.getTableName(type) + "." + foreignKey + "=?", getId()).execute();
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// OVERRIDEN METHODS
 	//////////////////////////////////////////////////////////////////////////////////////
+
+	@Override
+	public String toString() {
+		return mTableInfo.getTableName() + "@" + getId();
+	}
 
 	@Override
 	public boolean equals(Object obj) {
