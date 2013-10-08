@@ -29,4 +29,9 @@
 	<target name="package" depends="init, compile">
 		<jar destfile="${dist.dir}/ActiveAndroid.jar" basedir="${build.dir}"/>
 	</target>
+
+	<target name="copy_jar" depends="package">
+	    <copy file="${dist.dir}/ActiveAndroid.jar" overwrite="true" verbose="true" todir="../brand-inktera/libs" />
+	    <copy file="${dist.dir}/ActiveAndroid.jar" overwrite="true" verbose="true" todir="../bruno-android/libs" />	    	     
+	</target>
 </project>
